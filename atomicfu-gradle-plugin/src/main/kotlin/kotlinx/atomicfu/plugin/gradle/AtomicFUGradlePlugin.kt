@@ -20,7 +20,7 @@ import java.util.*
 import java.util.concurrent.*
 import org.jetbrains.kotlin.gradle.targets.js.*
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
-import org.jetbrains.kotlinx.atomicfu.gradle.*
+import org.danbrough.kotlinx.atomicfu.gradle.*
 
 private const val EXTENSION_NAME = "atomicfu"
 private const val ORIGINAL_DIR_NAME = "originalClassesDir"
@@ -117,7 +117,7 @@ private fun Project.addCompilerPluginDependency() {
                     kotlinCompilation.dependencies {
                         // add atomicfu compiler plugin dependency
                         // to provide the `kotlinx-atomicfu-runtime` library used during compiler plugin transformation
-                        implementation("org.jetbrains.kotlin:atomicfu:${getKotlinPluginVersion()}")
+                        implementation("org.danbrough.kotlin:atomicfu:${getKotlinPluginVersion()}")
                     }
                 }
             }
@@ -150,7 +150,7 @@ private val Project.config: AtomicFUPluginExtension
     get() = extensions.findByName(EXTENSION_NAME) as? AtomicFUPluginExtension ?: AtomicFUPluginExtension(null)
 
 private fun getAtomicfuDependencyNotation(platform: Platform, version: String): String =
-    "org.jetbrains.kotlinx:atomicfu${platform.suffix}:$version"
+    "org.danbrough.kotlinx:atomicfu${platform.suffix}:$version"
 
 // Note "afterEvaluate" does nothing when the project is already in executed state, so we need
 // a special check for this case
