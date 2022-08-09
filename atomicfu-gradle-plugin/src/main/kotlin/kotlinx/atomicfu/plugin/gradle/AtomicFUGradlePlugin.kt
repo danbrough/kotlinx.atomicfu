@@ -21,7 +21,6 @@ import java.util.concurrent.*
 import org.jetbrains.kotlin.gradle.targets.js.*
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
 import org.jetbrains.kotlinx.atomicfu.gradle.*
-import org.jetbrains.kotlin.gradle.tasks.AbstractKotlinCompileTool
 
 private const val EXTENSION_NAME = "atomicfu"
 private const val ORIGINAL_DIR_NAME = "originalClassesDir"
@@ -89,12 +88,10 @@ private fun Project.configureTasks() {
 
 private fun Project.isCompilerPluginAvailable(): Boolean {
     // kotlinx-atomicfu compiler plugin is available for KGP >= 1.6.20
-    val kotlinVersion = getKotlinPluginVersion()
-    val (majorVersion, minorVersion) = kotlinVersion
+    val (majorVersion, minorVersion, patch) = getKotlinPluginVersion()
         .split('.')
-        .take(2)
+        .take(3)
         .map { it.toInt() }
-    val patch = kotlinVersion.substringAfterLast('.').substringBefore('-').toInt()
     return majorVersion == 1 && (minorVersion == 6 && patch >= 20 || minorVersion > 6)
 }
 
@@ -108,7 +105,7 @@ private fun String.toBooleanStrict(): Boolean = when (this) {
 }
 
 private fun Project.needsJsIrTransformation(target: KotlinTarget): Boolean =
-    rootProject.getBooleanProperty(ENABLE_IR_TRANSFORMATION) && target.isJsIrTarget()
+    config.transformJs && target.isJsIrTarget()
 
 private fun KotlinTarget.isJsIrTarget() = (this is KotlinJsTarget && this.irTarget != null) || this is KotlinJsIrTarget
 
@@ -118,20 +115,9 @@ private fun Project.addCompilerPluginDependency() {
             if (needsJsIrTransformation(target)) {
                 target.compilations.forEach { kotlinCompilation ->
                     kotlinCompilation.dependencies {
-                        val kotlinVersion = getKotlinPluginVersion()
-                        val (majorVersion, minorVersion) = kotlinVersion
-                            .split('.')
-                            .take(2)
-                            .map { it.toInt() }
-                        val patch = kotlinVersion.substringAfterLast('.').substringBefore('-').toInt()
-                        if (majorVersion == 1 && (minorVersion == 7 && patch >= 10 || minorVersion > 7)) {
-                            // since Kotlin 1.7.10 we can add `atomicfu-runtime` dependency directly
-                            implementation("org.jetbrains.kotlin:kotlinx-atomicfu-runtime:$kotlinVersion")
-                        } else {
-                            // add atomicfu compiler plugin dependency
-                            // to provide the `atomicfu-runtime` library used during compiler plugin transformation
-                            implementation("org.jetbrains.kotlin:atomicfu:$kotlinVersion")
-                        }
+                        // add atomicfu compiler plugin dependency
+                        // to provide the `kotlinx-atomicfu-runtime` library used during compiler plugin transformation
+                        implementation("org.jetbrains.kotlin:atomicfu:${getKotlinPluginVersion()}")
                     }
                 }
             }
@@ -187,10 +173,12 @@ fun Project.withPluginWhenEvaluatedDependencies(plugin: String, fn: Project.(ver
 }
 
 fun Project.withKotlinTargets(fn: (KotlinTarget) -> Unit) {
-    extensions.findByType(KotlinTargetsContainer::class.java)?.let { kotlinExtension ->
+    extensions.findByType(KotlinProjectExtension::class.java)?.let { kotlinExtension ->
+        val targetsExtension = (kotlinExtension as? ExtensionAware)?.extensions?.findByName("targets")
+        @Suppress("UNCHECKED_CAST")
+        val targets = targetsExtension as? NamedDomainObjectContainer<KotlinTarget>
         // find all compilations given sourceSet belongs to
-        kotlinExtension.targets
-            .all { target -> fn(target) }
+        targets?.all { target -> fn(target) }
     }
 }
 
@@ -267,22 +255,8 @@ private fun Project.configureTransformationForTarget(target: KotlinTarget) {
                 Callable { originalDirsByCompilation[mainCompilation]!! }
             )
 
-            // KGP >= 1.7.0 has breaking changes in task hierarchy:
-            // https://youtrack.jetbrains.com/issue/KT-32805#focus=Comments-27-5915479.0-0
-            val (majorVersion, minorVersion) = getKotlinPluginVersion()
-                .split('.')
-                .take(2)
-                .map { it.toInt() }
-            if (majorVersion == 1 && minorVersion < 7) {
-                (tasks.findByName(compilation.compileKotlinTaskName) as? AbstractCompile)?.classpath =
-                    originalMainClassesDirs + compilation.compileDependencyFiles - mainCompilation.output.classesDirs
-            } else {
-                (tasks.findByName(compilation.compileKotlinTaskName) as? AbstractKotlinCompileTool<*>)
-                    ?.libraries
-                    ?.setFrom(
-                        originalMainClassesDirs + compilation.compileDependencyFiles - mainCompilation.output.classesDirs
-                    )
-            }
+            (tasks.findByName(compilation.compileKotlinTaskName) as? AbstractCompile)?.classpath =
+                originalMainClassesDirs + compilation.compileDependencyFiles - mainCompilation.output.classesDirs
 
             (tasks.findByName("${target.name}${compilation.name.capitalize()}") as? Test)?.classpath =
                 originalMainClassesDirs + (compilation as KotlinCompilationToRunnableFiles).runtimeDependencyFiles - mainCompilation.output.classesDirs
@@ -311,13 +285,13 @@ fun Project.configureMultiplatformPluginDependencies(version: String) {
     if (rootProject.getBooleanProperty("kotlin.mpp.enableGranularSourceSetsMetadata")) {
         addCompilerPluginDependency()
         val mainConfigurationName = project.extensions.getByType(KotlinMultiplatformExtension::class.java).sourceSets
-            .getByName(KotlinSourceSet.COMMON_MAIN_SOURCE_SET_NAME)
-            .compileOnlyConfigurationName
+                .getByName(KotlinSourceSet.COMMON_MAIN_SOURCE_SET_NAME)
+                .compileOnlyConfigurationName
         dependencies.add(mainConfigurationName, getAtomicfuDependencyNotation(Platform.MULTIPLATFORM, version))
 
         val testConfigurationName = project.extensions.getByType(KotlinMultiplatformExtension::class.java).sourceSets
-            .getByName(KotlinSourceSet.COMMON_TEST_SOURCE_SET_NAME)
-            .implementationConfigurationName
+                .getByName(KotlinSourceSet.COMMON_TEST_SOURCE_SET_NAME)
+                .implementationConfigurationName
         dependencies.add(testConfigurationName, getAtomicfuDependencyNotation(Platform.MULTIPLATFORM, version))
 
         // For each source set that is only used in Native compilations, add an implementation dependency so that it
@@ -339,15 +313,15 @@ fun Project.configureMultiplatformPluginDependencies(version: String) {
             if (compilationNames.size != 1)
                 error("Source set '${sourceSet.name}' of project '$name' is part of several compilations $compilationNames")
             val compilationType = compilationNames.single().compilationNameToType()
-                ?: return@forEach // skip unknown compilations
+                    ?: return@forEach // skip unknown compilations
             val platform =
-                if (platformTypes.size > 1) Platform.MULTIPLATFORM else // mix of platform types -> "common"
-                    when (platformTypes.single()) {
-                        KotlinPlatformType.common -> Platform.MULTIPLATFORM
-                        KotlinPlatformType.jvm, KotlinPlatformType.androidJvm -> Platform.JVM
-                        KotlinPlatformType.js -> Platform.JS
-                        KotlinPlatformType.native, KotlinPlatformType.wasm -> Platform.NATIVE
-                    }
+                    if (platformTypes.size > 1) Platform.MULTIPLATFORM else // mix of platform types -> "common"
+                        when (platformTypes.single()) {
+                            KotlinPlatformType.common -> Platform.MULTIPLATFORM
+                            KotlinPlatformType.jvm, KotlinPlatformType.androidJvm -> Platform.JVM
+                            KotlinPlatformType.js -> Platform.JS
+                            KotlinPlatformType.native, KotlinPlatformType.wasm -> Platform.NATIVE
+                        }
             val configurationName = when {
                 // impl dependency for native (there is no transformation)
                 platform == Platform.NATIVE -> sourceSet.implementationConfigurationName
@@ -487,7 +461,6 @@ open class AtomicFUTransformTask : ConventionTask() {
 
     @Input
     var jvmVariant = "FU"
-
     @Input
     var verbose = false
 
@@ -512,7 +485,6 @@ open class AtomicFUTransformJsTask : ConventionTask() {
 
     @OutputDirectory
     lateinit var outputDir: File
-
     @Input
     var verbose = false
 

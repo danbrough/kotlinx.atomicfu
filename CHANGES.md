@@ -1,26 +1,5 @@
 # Change log for kotlinx.atomicfu
 
-# Version 0.18.3
-
-* Fix for atomicfu-gradle-plugin application to the MPP project (for Kotlin 1.7.20).
-
-# Version 0.18.2
-
-* In Kotlin 1.7.10 the name of `atomicfu-runtime` module was reverted back to `kotlinx-atomicfu-runtime`, 
-  as the renaming was an incompatible change. 
-  Fixed `atomicfu-gradle-plugin` to add `kotlinx-atomicfu-runtime` dependency directly.
-
-# Version 0.18.1
-
-* Fix for the compatibility issue: add `atomicfu-runtime` dependency directly since Kotlin 1.7.10.
-
-# Version 0.18.0
-
-* Update Kotlin to 1.7.0.
-* Fix kotlin 1.7 compatibility (#222).
-* Update JVM target to 1.8 (see KT-45165).
-* Fix for parsing Kotlin version in AtomicfuGradlePlugin.
-
 # Version 0.17.3
 
 * Adding compiler plugin dependency only for projects with KGP >= 1.6.20 (#226).
