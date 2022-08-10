@@ -117,7 +117,7 @@ private fun Project.addCompilerPluginDependency() {
                     kotlinCompilation.dependencies {
                         // add atomicfu compiler plugin dependency
                         // to provide the `kotlinx-atomicfu-runtime` library used during compiler plugin transformation
-                        implementation("org.danbrough.kotlin:atomicfu:${getKotlinPluginVersion()}")
+                        implementation("org.danbrough.kotlinx:atomicfu:${getKotlinPluginVersion()}")
                     }
                 }
             }
