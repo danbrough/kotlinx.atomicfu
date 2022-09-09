@@ -7,9 +7,7 @@
 import org.gradle.api.*
 import org.gradle.api.artifacts.dsl.*
 import org.gradle.api.provider.*
-import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.*
-import org.gradle.kotlin.dsl.findByType
 import org.gradle.plugins.signing.*
 import java.net.*
 
@@ -47,17 +45,7 @@ fun MavenPom.configureMavenCentralMetadata(project: Project) {
 }
 
 fun mavenRepositoryUri(): URI {
-    return URI("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-    // TODO -SNAPSHOT detection can be made here as well
-//    val repositoryId: String? = System.getenv("libs.repository.id")
-//    return if (repositoryId == null) {
-//        // Using implicitly created staging, for MPP it's likely to be a mistake because
-//        // publication on TeamCity will create 3 independent staging repositories
-//        System.err.println("Warning: using an implicitly created staging for atomicfu")
-//        URI("https://oss.sonatype.org/service/local/staging/deploy/maven2/https://s01.oss.sonatype.org/service/local/")
-//    } else {
-//        URI("https://oss.sonatype.org/service/local/staging/deployByRepositoryId/$repositoryId")
-//    }
+     return URI("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
 }
 
 fun configureMavenPublication(rh: RepositoryHandler, project: Project) {
@@ -74,9 +62,10 @@ fun signPublicationIfKeyPresent(project: Project, publication: MavenPublication)
     val keyId = project.getSensitiveProperty("libs.sign.key.id")
     val signingKey = project.getSensitiveProperty("libs.sign.key.private")
     val signingKeyPassphrase = project.getSensitiveProperty("libs.sign.passphrase")
-    project.extensions.configure<SigningExtension>("signing") {
-      sign(publication)
-    }
+        project.extensions.configure<SigningExtension>("signing") {
+            sign(publication)
+        }
+
 }
 
 private fun Project.getSensitiveProperty(name: String): String? {

@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.plugin.*
 
 buildscript {
     dependencies {
-        classpath("org.jetbrains.kotlinx:atomicfu-gradle-plugin:0.17.0")
+        classpath("org.danbrough.kotlinx:atomicfu-gradle-plugin:0.17.3")
     }
 }
 
