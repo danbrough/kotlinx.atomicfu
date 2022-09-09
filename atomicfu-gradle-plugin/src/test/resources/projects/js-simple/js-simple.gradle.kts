@@ -2,12 +2,12 @@ import kotlinx.atomicfu.plugin.gradle.*
 
 buildscript {
     dependencies {
-        classpath("org.danbrough.kotlinx:atomicfu-gradle-plugin:0.17.0")
+        classpath("org.jetbrains.kotlinx:atomicfu-gradle-plugin:0.17.0")
     }
 }
 
 plugins {
-    kotlin("js") version "1.6.0"
+    kotlin("js")
 }
 
 apply(plugin = "kotlinx-atomicfu")
