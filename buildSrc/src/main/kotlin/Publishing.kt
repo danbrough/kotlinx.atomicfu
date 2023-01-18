@@ -65,10 +65,10 @@ fun signPublicationIfKeyPresent(project: Project, publication: MavenPublication)
 /*    val keyId = project.getSensitiveProperty("libs.sign.key.id")
     val signingKey = project.getSensitiveProperty("libs.sign.key.private")
     val signingKeyPassphrase = project.getSensitiveProperty("libs.sign.passphrase")*/
-  /*      project.extensions.configure<SigningExtension>("signing") {
+   project.extensions.configure<SigningExtension>("signing") {
             // useInMemoryPgpKeys(keyId, signingKey, signingKeyPassphrase)
             sign(publication)
-        }*/
+        }
 
 }
 
