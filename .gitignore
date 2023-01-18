@@ -3,3 +3,5 @@
 */target/*
 build
 .gradle
+kotlin-js-store
+local.properties
