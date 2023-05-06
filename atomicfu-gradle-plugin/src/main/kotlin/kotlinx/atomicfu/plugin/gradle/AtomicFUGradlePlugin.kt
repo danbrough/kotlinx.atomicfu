@@ -156,9 +156,9 @@ private fun Project.addCompilerPluginDependency() {
                     kotlinCompilation.dependencies {
                         if (getKotlinVersion().atLeast(1, 7, 10)) {
                             // since Kotlin 1.7.10 `kotlinx-atomicfu-runtime` is published and should be added directly
-                            implementation("org.jetbrains.kotlin:kotlinx-atomicfu-runtime:${getKotlinPluginVersion()}")
+                            implementation("org.danbrough.kotlin:kotlinx-atomicfu-runtime:${getKotlinPluginVersion()}")
                         } else {
-                            implementation("org.jetbrains.kotlin:atomicfu:${getKotlinPluginVersion()}")
+                            implementation("org.danbrough.kotlin:atomicfu:${getKotlinPluginVersion()}")
                         }
                     }
                 }
@@ -192,7 +192,7 @@ private val Project.config: AtomicFUPluginExtension
     get() = extensions.findByName(EXTENSION_NAME) as? AtomicFUPluginExtension ?: AtomicFUPluginExtension(null)
 
 private fun getAtomicfuDependencyNotation(platform: Platform, version: String): String =
-    "org.jetbrains.kotlinx:atomicfu${platform.suffix}:$version"
+    "org.danbrough.kotlinx:atomicfu${platform.suffix}:$version"
 
 // Note "afterEvaluate" does nothing when the project is already in executed state, so we need
 // a special check for this case

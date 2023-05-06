@@ -55,28 +55,36 @@ fun mavenRepositoryUri(): URI {
     }
 }
 
+
 fun configureMavenPublication(rh: RepositoryHandler, project: Project) {
     rh.maven {
-        url = mavenRepositoryUri()
+                val repositoryId: String = System.getenv("SONATYPE_REPO_ID")!!
+                url = URI("https://s01.oss.sonatype.org/service/local/staging/deployByRepositoryId/$repositoryId")
         credentials {
-            username = project.getSensitiveProperty("libs.sonatype.user")
-            password = project.getSensitiveProperty("libs.sonatype.password")
+
+                        username = project.getSensitiveProperty("SONATYPE_USER")
+                        password = project.getSensitiveProperty("SONATYPE_PASSWORD")
         }
     }
+
+        rh.maven {
+                url = URI("/usr/local/kotlinxtras/build/xtras/maven")
+                name = "xtras"
+            }
 }
 
 fun signPublicationIfKeyPresent(project: Project, publication: MavenPublication) {
-    val keyId = project.getSensitiveProperty("libs.sign.key.id")
-    val signingKey = project.getSensitiveProperty("libs.sign.key.private")
-    val signingKeyPassphrase = project.getSensitiveProperty("libs.sign.passphrase")
-    if (!signingKey.isNullOrBlank()) {
-        project.extensions.configure<SigningExtension>("signing") {
-            useInMemoryPgpKeys(keyId, signingKey, signingKeyPassphrase)
-            sign(publication)
-        }
-    }
-}
 
+    /*    val keyId = project.getSensitiveProperty("libs.sign.key.id")
+
++    val signingKeyPassphrase = project.getSensitiveProperty("libs.sign.passphrase")*/
+       project.extensions.configure<SigningExtension>("signing") {
+                    // useInMemoryPgpKeys(keyId, signingKey, signingKeyPassphrase)
+        sign(publication)
+    }
+
+
+}
 private fun Project.getSensitiveProperty(name: String): String? {
     return project.findProperty(name) as? String ?: System.getenv(name)
 }
