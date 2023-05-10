@@ -57,15 +57,18 @@ fun mavenRepositoryUri(): URI {
 
 
 fun configureMavenPublication(rh: RepositoryHandler, project: Project) {
-    rh.maven {
-                val repositoryId: String = System.getenv("SONATYPE_REPO_ID")!!
-                url = URI("https://s01.oss.sonatype.org/service/local/staging/deployByRepositoryId/$repositoryId")
-        credentials {
+  System.getenv("SONATYPE_REPO_ID")?.also { repositoryId ->
 
-                        username = project.getSensitiveProperty("SONATYPE_USER")
-                        password = project.getSensitiveProperty("SONATYPE_PASSWORD")
-        }
+    rh.maven {
+      url =
+        URI("https://s01.oss.sonatype.org/service/local/staging/deployByRepositoryId/$repositoryId")
+      credentials {
+
+        username = project.getSensitiveProperty("SONATYPE_USER")
+        password = project.getSensitiveProperty("SONATYPE_PASSWORD")
+      }
     }
+  }
 
         rh.maven {
                 url = URI("/usr/local/kotlinxtras/build/xtras/maven")
