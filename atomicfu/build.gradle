@@ -101,6 +101,7 @@ if (rootProject.ext.native_targets_enabled) {
 
                 // Tier #2
                 addTarget(presets.linuxArm64)
+                addTarget(presets.linuxArm32Hfp)
                 addTarget(presets.watchosSimulatorArm64)
                 addTarget(presets.watchosX64)
                 addTarget(presets.watchosArm32)

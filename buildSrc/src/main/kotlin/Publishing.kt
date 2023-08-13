@@ -45,36 +45,26 @@ fun MavenPom.configureMavenCentralMetadata(project: Project) {
 }
 
 fun mavenRepositoryUri(): URI {
-    val repositoryId: String? = System.getenv("libs.repository.id")
-    return if (repositoryId == null) {
-        // Using implicitly created staging, for MPP it's likely to be a mistake because
-        // publication on TeamCity will create 3 independent staging repositories
-        URI("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-    } else {
-        URI("https://oss.sonatype.org/service/local/staging/deployByRepositoryId/$repositoryId")
-    }
+    return URI("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
 }
 
 fun configureMavenPublication(rh: RepositoryHandler, project: Project) {
     rh.maven {
         url = mavenRepositoryUri()
         credentials {
-            username = project.getSensitiveProperty("libs.sonatype.user")
-            password = project.getSensitiveProperty("libs.sonatype.password")
+            username = project.getSensitiveProperty("sonatypeUsername")
+          password = project.getSensitiveProperty("sonatypePassword")
         }
     }
 }
 
 fun signPublicationIfKeyPresent(project: Project, publication: MavenPublication) {
-    val keyId = project.getSensitiveProperty("libs.sign.key.id")
-    val signingKey = project.getSensitiveProperty("libs.sign.key.private")
-    val signingKeyPassphrase = project.getSensitiveProperty("libs.sign.passphrase")
-    if (!signingKey.isNullOrBlank()) {
+
         project.extensions.configure<SigningExtension>("signing") {
-            useInMemoryPgpKeys(keyId, signingKey, signingKeyPassphrase)
+          //  useInMemoryPgpKeys(keyId, signingKey, signingKeyPassphrase)
             sign(publication)
         }
-    }
+
 }
 
 private fun Project.getSensitiveProperty(name: String): String? {

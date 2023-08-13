@@ -203,7 +203,7 @@ private val Project.config: AtomicFUPluginExtension
     get() = extensions.findByName(EXTENSION_NAME) as? AtomicFUPluginExtension ?: AtomicFUPluginExtension(null)
 
 private fun getAtomicfuDependencyNotation(platform: Platform, version: String): String =
-    "org.jetbrains.kotlinx:atomicfu${platform.suffix}:$version"
+    "org.danbrough.kotlinx:atomicfu${platform.suffix}:$version"
 
 // Note "afterEvaluate" does nothing when the project is already in executed state, so we need
 // a special check for this case
